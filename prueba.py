@@ -6,7 +6,7 @@ import tkinter.messagebox as messagebox
 from datetime import datetime
 from tkinter import filedialog
 from calendario_stage4 import *
-
+import Conexion
 
 class Evento:
     def __init__(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
@@ -413,6 +413,10 @@ class CalendarApp:
 
 
 #......................fila1........................................
+#conexion
+#Conexion.conectar()
+
+Conexion.create_if_not_exists()
 
 
 root = tk.Tk()
