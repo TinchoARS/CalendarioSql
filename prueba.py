@@ -8,6 +8,7 @@ from tkinter import filedialog
 from calendario_stage4 import *
 
 
+
 class Evento:
     def __init__(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
         self.titulo = titulo
@@ -222,6 +223,7 @@ class CalendarApp:
     def mostrar_eventos(self):
         ventana_secundaria = tk.Toplevel(self.frame_evento)
         ventana_secundaria.geometry("1400x300")
+        most_eventos()
 
         # Crear objeto Frame para la tabla
         frame_tabla = tk.Frame(ventana_secundaria)
@@ -372,6 +374,7 @@ class CalendarApp:
 
         tabla = tk.Frame(ventana)
         tabla.grid(row=0, column=0)
+        
 
 
 
