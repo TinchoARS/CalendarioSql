@@ -8,6 +8,7 @@ from tkinter import filedialog
 from calendario_stage4 import *
 
 
+
 class Evento:
     def __init__(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
         self.titulo = titulo
