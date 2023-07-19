@@ -97,17 +97,17 @@ def nuevo_evento(evento):
     conn = conectar()
     cur = conn.cursor()
     cur.execute(query_fecha, (evento.fecha,))
-    fecha_id = cur.lastrowid
+    fecha_id = cur.lastrowid#obtiene el id que se creo
 
     # Insertar en la tabla hora
     query_hora = "INSERT INTO hora (hora) VALUES (%s)"
     cur.execute(query_hora, (evento.hora,))
-    hora_id = cur.lastrowid
+    hora_id = cur.lastrowid #obtiene el id que se creo
 
     # Insertar en la tabla eventos
     query_eventos = "INSERT INTO eventos (titulo, duracion, hora_idhora, fecha_idfecha, calendario_idcalendario, importancia, descripcion, etiquetas) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     cur.execute(query_eventos, (evento.titulo, evento.duracion, hora_id, fecha_id, 1, evento.importancia, evento.descripcion, evento.etiquetas))
-    evento_id = cur.lastrowid
+    evento_id = cur.lastrowid #obtiene el id que se creo
 
     conn.commit()
     conn.close()
