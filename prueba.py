@@ -8,27 +8,6 @@ from tkinter import filedialog
 from calendario_stage4 import *
 from Conexion import *
 
-class Evento:
-    def __init__(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
-        self.titulo = titulo
-        self.fecha = fecha
-        self.hora = hora
-        self.duracion = duracion
-        self.descripcion = descripcion
-        self.importancia = importancia
-        self.recordatorio = recordatorio
-        self.etiquetas = etiquetas if etiquetas is not None else []
-
-    @property
-    def recordatorio(self):
-        return self._recordatorio
-
-    @recordatorio.setter
-    def recordatorio(self, value):
-        if value is None:
-            self._recordatorio = None
-        else:
-            self._recordatorio = datetime.strptime(value, "%d/%m/%Y %H:%M")
 
 
 #.............Pantalla....................
@@ -250,3 +229,14 @@ app = CalendarApp(root)
 
 # Llamar al método mainloop() de la instancia de tkinter.Tk()
 root.mainloop()
+
+app.crear_evento(
+    "Título del evento",
+    "10/08/2023",
+    "15:30",
+    2,
+    "Descripción del evento",
+    "Normal",
+    "12/08/2023 14:00",
+    "etiqueta1, etiqueta2"
+)
