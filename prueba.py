@@ -42,19 +42,14 @@ class CalendarApp:
         master.config(bd="35")
         master.config(cursor="pencil")
         master.iconbitmap("calendario.ico")
-        self.titulo= StringVar()
-        self.fecha= StringVar()
-        self.hora= StringVar()
-        self.duracion= StringVar()
-        self.descripcion= StringVar()
-        self.importancia= StringVar(value="Normal")
-        self.recordatorio= StringVar()
-        self.etiquetas= StringVar()
-        self.busqueda= StringVar()
-
-        # Inicialización de variables
-        self.eventos = []
-        self.evento_actual = None
+        self.titulo = tk.StringVar()
+        self.fecha = tk.StringVar()
+        self.hora = tk.StringVar()
+        self.duracion = tk.StringVar()
+        self.descripcion = tk.StringVar()
+        self.importancia = tk.StringVar()
+        self.recordatorio = tk.StringVar()
+        self.etiquetas = tk.StringVar()
         self.ordenamiento_actual = "cronologico"
 
         # Creación de widgets
@@ -147,218 +142,61 @@ class CalendarApp:
 
         # Asociación de eventos
         # ...
-    def crear_evento(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
+    def crear_evento(self, titulo, fecha, hora, duracion, descripcion, importancia, recordatorio, etiquetas):
+        print("Llamando a la función crear_evento")
         titulo = self.titulo.get()
         fecha = datetime.strptime(self.fecha.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
         hora = datetime.strptime(self.hora.get(), "%H:%M").strftime("%H:%M")
+        print(f"Valor de 'titulo': {titulo}")
+        print(f"Valor de 'fecha': {fecha}")
         duracion = int(self.duracion.get())
         descripcion = self.descripcion.get()
         importancia = self.importancia.get()
         recordatorio = self.recordatorio.get()
         etiquetas = self.etiquetas.get()
 
-        conec= conectar()
+        conec = conectar()
         cursor = conec.cursor()
-          # Insertar la fecha en la tabla "fecha"
-        consulta = "SELECT COUNT(*) FROM eventos WHERE fecha_idfecha = %s AND hora_idhora = %s"
-        cursor.execute(consulta, (fecha, hora))
-        resultado = cursor.fetchone()
+        try:
+            # Insertar la fecha en la tabla "fecha"
+            consulta = "SELECT COUNT(*) FROM eventos WHERE fecha_idfecha = %s AND hora_idhora = %s"
+            cursor.execute(consulta, (fecha, hora))
+            resultado = cursor.fetchone()
 
-    # Si ya existe un evento en la misma hora y fecha, mostrar un mensaje de error y no insertar el nuevo evento
-        if resultado[0] > 0:
-            messagebox.showerror("Error", "Ya existe un evento a la misma hora y fecha.")
-        else:
-       
-            cursor.execute("INSERT INTO fecha (fecha) VALUES (%s)", (fecha,))
-            conec.commit()
+            # Si ya existe un evento en la misma hora y fecha, mostrar un mensaje de error y no insertar el nuevo evento
+            if resultado[0] > 0:
+                messagebox.showerror("Error", "Ya existe un evento a la misma hora y fecha.")
+            else:
+                cursor.execute("INSERT INTO fecha (fecha) VALUES (%s)", (fecha,))
+                conec.commit()
 
-            # Obtener el ID de la fecha insertada
-            fecha_id = cursor.lastrowid
+                # Obtener el ID de la fecha insertada
+                fecha_id = cursor.lastrowid
 
-            # Insertar la hora en la tabla "hora" asociada a la fecha insertada
-            cursor.execute("INSERT INTO hora (idhora, fecha_idfecha) VALUES (NULL, %s)", (fecha_id,))
-            conec.commit()
+                # Insertar la hora en la tabla "hora" asociada a la fecha insertada
+                cursor.execute("INSERT INTO hora (idhora, fecha_idfecha) VALUES (NULL, %s)", (fecha_id,))
+                conec.commit()
 
-            # Obtener el ID de la hora insertada
-            hora_id = cursor.lastrowid
+                # Obtener el ID de la hora insertada
+                hora_id = cursor.lastrowid
 
-            # Insertar el evento en la tabla "eventos"
-            cursor.execute("""
-                INSERT INTO eventos (titulo, duracion, descripcion, hora_idhora, fecha_idfecha, importancia, recordatorio, etiquetas)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (titulo, duracion,descripcion, hora_id, fecha_id, importancia, recordatorio, etiquetas))
-            conec.commit()
-
-        cursor.close()
-        conec.close()
-
+                # Insertar el evento en la tabla "eventos"
+                cursor.execute("""
+                    INSERT INTO eventos (titulo, fecha_idfecha, hora_idhora, duracion, descripcion, importancia, recordatorio, etiquetas)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (titulo, fecha_id, hora_id, duracion, descripcion, importancia, recordatorio, etiquetas))
+                conec.commit()
+            for evento in self.eventos:
+                print(f"Título: {evento.titulo}, Fecha: {evento.fecha}, Hora: {evento.hora}")
+            cursor.close()
+            conec.close()
+        except Exception as e:
+            print(f"Error al crear el evento: {str(e)}")
         
 
 
 
-    def buscar_evento(self):
-        # Obtener el valor de la entrada de búsqueda
-        valor_busqueda = self.entrada_busqueda.get()
-
-        # Determinar el tipo de búsqueda a realizar
-        if self.opcion_busqueda.get() == 1:
-            # Buscar por título
-            evento_encontrado = None
-            for evento in self.eventos:
-                if evento.titulo == valor_busqueda:
-                    evento_encontrado = evento
-                    break
-
-            if evento_encontrado:
-                # Mostrar la información del evento encontrado
-                tk.messagebox.showinfo(
-                    "Eventos",
-                    f"Título: {evento_encontrado.titulo}\n"
-                    f"Fecha: {evento_encontrado.fecha}\n"
-                    f"Hora: {evento_encontrado.hora}\n")
-            else:
-                # Mostrar un mensaje de error si no se encontró el evento
-                tk.messagebox.showerror("Error", "El evento buscado no existe.")
-        elif self.opcion_busqueda.get() == 2:
-            # Buscar por etiqueta
-            eventos_encontrados = []
-            for evento in self.eventos:
-                if valor_busqueda in evento.etiquetas:
-                    eventos_encontrados.append(evento)
-
-            if eventos_encontrados:
-                # Mostrar la información de los eventos encontrados
-                texto_eventos = ""
-                for evento in eventos_encontrados:
-                    texto_eventos += f"Título: {evento.titulo}\n" \
-                                     f"Fecha: {evento.fecha}\n" \
-                                     f"Hora: {evento.hora}\n\n"
-                tk.messagebox.showinfo("Eventos encontrados", texto_eventos)
-            else:
-                # Mostrar un mensaje de error si no se encontraron eventos
-                tk.messagebox.showerror("Error", "No se encontraron eventos con la etiqueta especificada.")
-
-    def eliminar_evento(self):
-        del self.eventos
-        messagebox.showinfo(
-            "Evento eliminado",
-            f"Evento:\n {self.titulo.get()} \nEliminado exitosamente!!")
-
-
-    def mostrar_eventos(self):
-        ventana_secundaria = tk.Toplevel(self.frame_evento)
-        ventana_secundaria.geometry("1400x300")
-
-        # Crear objeto Frame para la tabla
-        frame_tabla = tk.Frame(ventana_secundaria)
-        frame_tabla.pack(expand=True, fill="both")
-        ventana_secundaria.title("Calendario de eventos")
-        ventana_secundaria.config(bg="pink")
-        ventana_secundaria.config(relief="groove")
-        ventana_secundaria.config(bd="35")
-        ventana_secundaria.config(cursor="pencil")
-        ventana_secundaria.iconbitmap("calendario.ico")
-
-        # Crear tabla
-        tabla = ttk.Treeview(frame_tabla, columns=("columna1", "columna2", "columna3", "columna4", "columna5", "columna6", "columna7"))
-        tabla.heading("#0", text="Titulo")
-        tabla.heading("columna1", text="fecha")
-        tabla.heading("columna2", text="hora")
-        tabla.heading("columna3", text="duracion")
-        tabla.heading("columna4", text="descripcion")
-        tabla.heading("columna5", text="importancia")
-        tabla.heading("columna6", text="recordatorio")
-        tabla.heading("columna7", text="etiquetas")
-
-        for evento in self.eventos:
-            tabla.insert("", "end", text=self.titulo.get(), values=(self.fecha.get(), self.hora.get(), self.duracion.get(), self.descripcion.get(), self.importancia.get(), self.recordatorio.get(), self.etiquetas.get()))
-
-        tabla.pack(expand=True, fill="both")
-
-        # Mostrar ventana secundaria
-        ventana_secundaria.mainloop()
-
-
-
-    def modificarevento(self):
-        ventana_secundaria2 = tk.Toplevel(self.frame_evento)
-        ventana_secundaria2.title("Calendario de eventos")
-        ventana_secundaria2.config(bg="pink")
-        ventana_secundaria2.config(relief="groove")
-        ventana_secundaria2.config(bd="35")
-        ventana_secundaria2.config(cursor="pencil")
-        ventana_secundaria2.iconbitmap("calendario.ico")
-
-        # Crear objeto Frame para la tabla
-        frame_tabla = tk.Frame(ventana_secundaria2)
-        frame_tabla.grid(row=0, column=0, sticky="nsew")
-
-        # Configuración de la ventana
-        ventana_secundaria2.title("Modificar evento")
-
-        # Creación del formulario para ingresar los datos del evento
-        self.frame = tk.Frame(frame_tabla)
-        self.frame.grid(row=0, column=0, sticky="nsew")
-
-        # Campo de entrada para el título del evento
-        tk.Label(self.frame, text="Título:").grid(row=0, column=0)
-        self.titulo = tk.Entry(self.frame)
-        self.titulo.grid(row=0, column=1)
-        self.titulo.insert(0, self.titulo.get())
-
-        # Campo de entrada para la fecha del evento
-        tk.Label(self.frame, text="Fecha (dd/mm/aaaa):").grid(row=1, column=0)
-        self.fecha = tk.Entry(self.frame)
-        self.fecha.grid(row=1, column=1)
-        self.fecha.insert(0, self.fecha.get())
-
-        # Campo de entrada para la hora del evento
-        tk.Label(self.frame, text="Hora (hh:mm):").grid(row=2, column=0)
-        self.hora = tk.Entry(self.frame)
-        self.hora.grid(row=2, column=1)
-        self.hora.insert(0, self.hora.get())
-
-        # Campo de entrada para la duración del evento
-        tk.Label(self.frame, text="Duración:").grid(row=3, column=0)
-        self.duracion = tk.Entry(self.frame)
-        self.duracion.grid(row=3, column=1)
-        self.duracion.insert(0, self.duracion.get())
-
-
-        # Campo de entrada para la descripción del evento
-        tk.Label(self.frame, text="Descripción:").grid(row=4, column=0)
-        self.descripcion = tk.Entry(self.frame)
-        self.descripcion.grid(row=4, column=1)
-        self.descripcion.insert(0, self.descripcion.get())
-
-        # Campo de entrada para la importancia del evento
-        tk.Label(self.frame, text="Importancia:").grid(row=5, column=0)
-        self.importancia = tk.StringVar(frame_tabla)
-        self.importancia.set(self.importancia.get())
-        opciones_importancia = ["Normal", "Importante"]
-        self.importancia_menu = tk.OptionMenu(self.frame, self.importancia, *opciones_importancia)
-        self.importancia_menu.grid(row=5, column=1)
-
-        # Campo de entrada para la fecha y hora del recordatorio del evento
-        tk.Label(self.frame, text="Fecha y hora del recordatorio (dd/mm/aaaa hh:mm):").grid(row=6, column=0)
-        self.recordatorio = tk.Entry(self.frame)
-        self.recordatorio.grid(row=6, column=1)
-        self.recordatorio.insert(0, self.recordatorio.get())
-
-        # Campo de entrada para las etiquetas del evento
-        tk.Label(self.frame, text="Etiquetas (separadas por comas):").grid(row=7, column=0)
-        self.etiquetas = tk.Entry(self.frame)
-        self.etiquetas.grid(row=7, column=1)
-        self.etiquetas.insert(0, self.etiquetas.get())
-
-
-        # Botón para guardar los cambios del
-
-
-        # Botón para guardar los cambios del evento
-        tk.Button(frame_tabla, text="Guardar", command=self.guardar).grid(row=8, column=0, pady=10)
-
-
+   
     def guardar(self):
         """
         Método que se ejecuta al presionar el botón "Guardar" en la ventana de
@@ -392,47 +230,7 @@ class CalendarApp:
         )
         self.eventos.append(evento_modificado)
 
-    def semanal(self):
-        ventana = tk.Tk()
-        ventana.title("Calendario Semanal")
-
-        tabla = tk.Frame(ventana)
-        tabla.grid(row=0, column=0)
-
-
-
-        # Crear las etiquetas de días de la semana
-        dias_semana = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        for i, dia in enumerate(dias_semana):
-            etiqueta_dia = tk.Label(tabla, text=dia, padx=5, pady=5, borderwidth=2, relief="groove")
-            etiqueta_dia.grid(row=0, column=i+1, sticky="nsew")
-
-        # Crear las etiquetas de hora en la columna 0
-        horas = ["9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        for i, hora in enumerate(horas):
-            etiqueta_hora = tk.Label(tabla, text=hora, padx=5, pady=5, borderwidth=2, relief="groove")
-            etiqueta_hora.grid(row=i+1, column=0, sticky="nsew")
-
-
-
-        for fila, hora in enumerate(horas):
-            for columna, dia in enumerate(dias_semana):
-                dia_semana = datetime.strptime(self.fecha.get(), '%d/%m/%Y').strftime('%A')
-                hora_semanal= datetime.strptime(self.hora.get(), '%H:%M').strftime('%H:%M')
-                eventos_del_dia = [evento for evento in self.eventos if dia_semana == dia and hora_semanal== hora]
-                for evento in eventos_del_dia:
-                    if evento.importancia == "Importante":
-                        etiqueta_evento = tk.Label(tabla, text=evento.titulo, padx=5, pady=5, borderwidth=2, relief="groove", background="red")
-                        etiqueta_evento.grid(row=fila+1, column=columna+1, sticky="nsew")
-                    else:
-                        etiqueta_evento = tk.Label(tabla, text=evento.titulo, padx=5, pady=5, borderwidth=2, relief="groove")
-                        etiqueta_evento.grid(row=fila+1, column=columna+1, sticky="nsew")
-        for i in range(len(dias_semana)+1):
-            tabla.columnconfigure(i, weight=1, minsize=100)
-        for i in range(len(horas)+1):
-            tabla.rowconfigure(i, weight=1, minsize=50)
-
-
+    
 
 #..................pantalla2......................
 
