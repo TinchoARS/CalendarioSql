@@ -5,7 +5,7 @@ import csv
 import tkinter.messagebox as messagebox
 from datetime import datetime
 from tkinter import filedialog
-from calendario_stage4 import *
+import tkinter.ttk as ttk
 import Conexion
 
 class Evento:
@@ -214,6 +214,8 @@ class CalendarApp:
 
     def eliminar_evento(self):
         del self.eventos
+
+        Conexion.eliminar_evento("cena con scaloni")
         messagebox.showinfo(
             "Evento eliminado",
             f"Evento:\n {self.titulo.get()} \nEliminado exitosamente!!")
@@ -416,8 +418,8 @@ class CalendarApp:
 #conexion
 #Conexion.conectar()
 
-Conexion.create_if_not_exists()
-
+#Conexion.create_if_not_exists()
+Conexion.conectar()
 
 root = tk.Tk()
 

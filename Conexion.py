@@ -30,10 +30,8 @@ def create_if_not_exists():
 
         CREATE TABLE IF NOT EXISTS `hora` (
             `idhora` int NOT NULL,
-            `fecha_idfecha` int NOT NULL,
-            PRIMARY KEY (`idhora`,`fecha_idfecha`),
-            KEY `fk_hora_fecha1_idx` (`fecha_idfecha`),
-            CONSTRAINT `fk_hora_fecha1` FOREIGN KEY (`fecha_idfecha`) REFERENCES `fecha` (`idfecha`)
+            `hora` time DEFAULT NULL,
+            PRIMARY KEY (`idhora`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
         CREATE TABLE IF NOT EXISTS `eventos` (
@@ -91,3 +89,21 @@ def create_if_not_exists():
     except errors.DatabaseError as err:
         print("Error al conectar o crear la base de datos.", err)
         raise
+
+def actualizar_evento(id_evento, evento):
+
+    query = "UPDATE tareas SET evento = %s WHERE id_evento = %s"
+    conn = conectar()
+    cur = conn.cursor()
+    cur.execute(query, (evento, id_evento))
+    conn.commit()
+    conn.close()
+
+def eliminar_evento(tituloEvento):
+    query = "DELETE FROM eventos WHERE titulo = %s"
+    conn = conectar()
+    cur = conn.cursor()
+    cur.execute(query, (tituloEvento,))
+    conn.commit()
+    conn.close()
+    
