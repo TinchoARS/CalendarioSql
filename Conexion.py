@@ -22,17 +22,18 @@ def create_if_not_exists():
             PRIMARY KEY (`idcalendario`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
-        CREATE TABLE IF NOT EXISTS `fecha` (
-            `idfecha` int NOT NULL,
-            `fecha` date NOT NULL,
-            PRIMARY KEY (`idfecha`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+   CREATE TABLE IF NOT EXISTS `fecha` (
+    `idfecha` int NOT NULL AUTO_INCREMENT,
+    `fecha` date NOT NULL,
+    PRIMARY KEY (`idfecha`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
-        CREATE TABLE IF NOT EXISTS `hora` (
-            `idhora` int NOT NULL,
-            `hora` time DEFAULT NULL,
-            PRIMARY KEY (`idhora`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+CREATE TABLE IF NOT EXISTS `hora` (
+    `idhora` int NOT NULL AUTO_INCREMENT,
+    `hora` time DEFAULT NULL,
+    PRIMARY KEY (`idhora`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
 
         CREATE TABLE IF NOT EXISTS `eventos` (
             `ideventos` int NOT NULL AUTO_INCREMENT,
@@ -90,15 +91,38 @@ def create_if_not_exists():
         print("Error al conectar o crear la base de datos.", err)
         raise
 
-def actualizar_evento(id_evento, evento):
+def nuevo_evento(evento):
+    # Insertar en la tabla fecha
+    query_fecha = "INSERT INTO fecha (fecha) VALUES (%s)"
+    conn = conectar()
+    cur = conn.cursor()
+    cur.execute(query_fecha, (evento.fecha,))
+    fecha_id = cur.lastrowid
 
-    query = "UPDATE tareas SET evento = %s WHERE id_evento = %s"
+    # Insertar en la tabla hora
+    query_hora = "INSERT INTO hora (hora) VALUES (%s)"
+    cur.execute(query_hora, (evento.hora,))
+    hora_id = cur.lastrowid
+
+    # Insertar en la tabla eventos
+    query_eventos = "INSERT INTO eventos (titulo, duracion, hora_idhora, fecha_idfecha, calendario_idcalendario, importancia, descripcion, etiquetas) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    cur.execute(query_eventos, (evento.titulo, evento.duracion, hora_id, fecha_id, 1, evento.importancia, evento.descripcion, evento.etiquetas))
+    evento_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+
+
+
+def actualizar_evento(id_evento, evento):
+   #falta terminar
+    query = "UPDATE eventos SET evento = %s WHERE id_evento = %s"
     conn = conectar()
     cur = conn.cursor()
     cur.execute(query, (evento, id_evento))
     conn.commit()
     conn.close()
-
+  #esperar a cargar eventos
 def eliminar_evento(tituloEvento):
     query = "DELETE FROM eventos WHERE titulo = %s"
     conn = conectar()

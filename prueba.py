@@ -9,27 +9,28 @@ import tkinter.ttk as ttk
 import Conexion
 
 class Evento:
-    def __init__(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
+    def __init__(self, titulo, fecha, hora, duracion, descripcion="", importancia="normal", etiquetas=None):
         self.titulo = titulo
-        self.fecha = fecha
-        self.hora = hora
-        self.duracion = duracion
+        self.fecha = datetime.strptime(fecha, "%Y-%m-%d").strftime("%Y-%m-%d")
+        self.hora = datetime.strptime(hora, "%H:%M:%S").strftime("%H:%M:%S")
+        self.duracion = datetime.strptime(duracion, "%H:%M:%S").strftime("%H:%M:%S")
         self.descripcion = descripcion
         self.importancia = importancia
-        self.recordatorio = recordatorio
-        self.etiquetas = etiquetas if etiquetas is not None else []
+        self.etiquetas = etiquetas
 
-    @property
-    def recordatorio(self):
-        return self._recordatorio
+    #@property
+    #def recordatorio(self):
+    #    return self._recordatorio
 
-    @recordatorio.setter
-    def recordatorio(self, value):
-        if value is None:
-            self._recordatorio = None
-        else:
-            self._recordatorio = datetime.strptime(value, "%d/%m/%Y %H:%M")
+    #@recordatorio.setter
+    #def recordatorio(self, value):
+    #    if value is None:
+    #        self._recordatorio = None
+    #    else:
+    #        self._recordatorio = datetime.strptime(value, "%d/%m/%Y %H:%M")
 
+    def __str__(self):
+        return f"Evento: {self.titulo}\nFecha: {self.fecha}\nHora: {self.hora}\nDuración: {self.duracion}\nDescripción: {self.descripcion}\nImportancia: {self.importancia}\nEtiquetas: {self.etiquetas}"#Recordatorio: {self.recordatorio}
 
 #.............Pantalla....................
 
@@ -101,10 +102,10 @@ class CalendarApp:
 
 
 
-        self.etiqueta_recordatorio = tk.Label(self.frame_evento, text="Fecha recordatorio:")
-        self.etiqueta_recordatorio.pack(side="top", anchor="w")
-        self.entrada_recordatorio = tk.Entry(self.frame_evento, textvariable=self.recordatorio)
-        self.entrada_recordatorio.pack(side="top", anchor="w")
+        #self.etiqueta_recordatorio = tk.Label(self.frame_evento, text="Fecha recordatorio:")
+        #self.etiqueta_recordatorio.pack(side="top", anchor="w")
+        #self.entrada_recordatorio = tk.Entry(self.frame_evento, textvariable=self.recordatorio)
+        #self.entrada_recordatorio.pack(side="top", anchor="w")
 
 
         self.etiqueta_etiquetas = tk.Label(self.frame_evento, text="Etiquetas:")
@@ -112,7 +113,7 @@ class CalendarApp:
         self.entrada_etiquetas = tk.Entry(self.frame_evento, textvariable= self.etiquetas)
         self.entrada_etiquetas.pack(side="top", anchor="w")
 
-        self.boton_crear_evento = tk.Button(self.frame_evento, text="Crear evento", command= lambda: self.crear_evento(self.titulo.get(), self.fecha.get(), self.hora.get(), self.duracion.get(), self.descripcion.get(), self.importancia.get(), self.recordatorio.get(), self.etiquetas.get()))
+        self.boton_crear_evento = tk.Button(self.frame_evento, text="Crear evento", command= lambda: self.crear_evento(self.titulo.get(), self.fecha.get(), self.hora.get(), self.duracion.get(), self.descripcion.get(), self.importancia.get(), self.etiquetas.get())) #self.recordatorio.get(), self.etiquetas.get()))
         self.boton_crear_evento.pack(side="top", anchor="w")
 
          # Crear el Radiobutton para seleccionar el tipo de búsqueda
@@ -147,11 +148,17 @@ class CalendarApp:
 
         # Asociación de eventos
         # ...
-    def crear_evento(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
-        fecha = datetime.strptime(fecha, "%d/%m/%Y")
-        hora = datetime.strptime(f"{hora}", "%H:%M")
-        nuevo_evento = Evento(self.titulo.get(), self.fecha.get(), self.hora.get(), self.duracion.get(), self.descripcion.get(), self.importancia.get(), self.recordatorio.get(), self.etiquetas.get())
-
+    def crear_evento(self, titulo, fecha, hora, duracion, descripcion="", importancia="normal", etiquetas=None):
+        nuevo_evento = Evento(
+            self.titulo.get(),
+            self.fecha.get().strip(),
+            self.hora.get(),
+            self.duracion.get(),
+            self.descripcion.get(),
+            self.importancia.get(),
+            self.etiquetas.get())
+        print(self.duracion.get())
+        print(nuevo_evento)
         # Verificar si la hora del evento ya existe en la lista de eventos
         for evento in self.eventos:
             if evento.hora == nuevo_evento.hora:
@@ -162,11 +169,13 @@ class CalendarApp:
                 break
 
         else:
+            Conexion.nuevo_evento(nuevo_evento)
             self.eventos.append(nuevo_evento)
             messagebox.showinfo(
                 "Evento creado",
                 f"Nuevo evento:\n {titulo} \ncreado exitosamente!!"
             )
+        
 
 
 
@@ -418,8 +427,8 @@ class CalendarApp:
 #conexion
 #Conexion.conectar()
 
-#Conexion.create_if_not_exists()
-Conexion.conectar()
+Conexion.create_if_not_exists()
+#Conexion.conectar()
 
 root = tk.Tk()
 
