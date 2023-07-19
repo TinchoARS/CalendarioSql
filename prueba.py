@@ -6,7 +6,7 @@ import tkinter.messagebox as messagebox
 from datetime import datetime
 from tkinter import filedialog
 from calendario_stage4 import *
-
+from Conexion import *
 
 class Evento:
     def __init__(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
@@ -148,25 +148,51 @@ class CalendarApp:
         # Asociación de eventos
         # ...
     def crear_evento(self, titulo, fecha, hora, duracion=1, descripcion="", importancia="normal", recordatorio=None, etiquetas=None):
-        fecha = datetime.strptime(fecha, "%d/%m/%Y")
-        hora = datetime.strptime(f"{hora}", "%H:%M")
-        nuevo_evento = Evento(self.titulo.get(), self.fecha.get(), self.hora.get(), self.duracion.get(), self.descripcion.get(), self.importancia.get(), self.recordatorio.get(), self.etiquetas.get())
+        titulo = self.titulo.get()
+        fecha = datetime.strptime(self.fecha.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
+        hora = datetime.strptime(self.hora.get(), "%H:%M").strftime("%H:%M")
+        duracion = int(self.duracion.get())
+        descripcion = self.descripcion.get()
+        importancia = self.importancia.get()
+        recordatorio = self.recordatorio.get()
+        etiquetas = self.etiquetas.get()
 
-        # Verificar si la hora del evento ya existe en la lista de eventos
-        for evento in self.eventos:
-            if evento.hora == nuevo_evento.hora:
-                messagebox.showerror(
-                    "Error",
-                    f'Ya existe un evento a la hora'
-                )
-                break
+        conec= conectar()
+        cursor = conec.cursor()
+          # Insertar la fecha en la tabla "fecha"
+        consulta = "SELECT COUNT(*) FROM eventos WHERE fecha_idfecha = %s AND hora_idhora = %s"
+        cursor.execute(consulta, (fecha, hora))
+        resultado = cursor.fetchone()
 
+    # Si ya existe un evento en la misma hora y fecha, mostrar un mensaje de error y no insertar el nuevo evento
+        if resultado[0] > 0:
+            messagebox.showerror("Error", "Ya existe un evento a la misma hora y fecha.")
         else:
-            self.eventos.append(nuevo_evento)
-            messagebox.showinfo(
-                "Evento creado",
-                f"Nuevo evento:\n {titulo} \ncreado exitosamente!!"
-            )
+       
+            cursor.execute("INSERT INTO fecha (fecha) VALUES (%s)", (fecha,))
+            conec.commit()
+
+            # Obtener el ID de la fecha insertada
+            fecha_id = cursor.lastrowid
+
+            # Insertar la hora en la tabla "hora" asociada a la fecha insertada
+            cursor.execute("INSERT INTO hora (idhora, fecha_idfecha) VALUES (NULL, %s)", (fecha_id,))
+            conec.commit()
+
+            # Obtener el ID de la hora insertada
+            hora_id = cursor.lastrowid
+
+            # Insertar el evento en la tabla "eventos"
+            cursor.execute("""
+                INSERT INTO eventos (titulo, duracion, descripcion, hora_idhora, fecha_idfecha, importancia, recordatorio, etiquetas)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (titulo, duracion,descripcion, hora_id, fecha_id, importancia, recordatorio, etiquetas))
+            conec.commit()
+
+        cursor.close()
+        conec.close()
+
+        
 
 
 
@@ -413,6 +439,10 @@ class CalendarApp:
 
 
 #......................fila1........................................
+#conexion
+#Conexion.conectar()
+
+
 
 
 root = tk.Tk()
