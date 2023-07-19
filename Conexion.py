@@ -44,6 +44,7 @@ def create_if_not_exists():
             `fecha_idfecha` int NOT NULL,
             `calendario_idcalendario` int NOT NULL,
             `importancia` varchar(45) DEFAULT NULL,
+            `descripcion` varchar(150) DEFAULT NULL,
             `etiquetas` varchar(45) DEFAULT NULL,
             PRIMARY KEY (`ideventos`),
             KEY `fk_eventos_hora1_idx` (`hora_idhora`),
