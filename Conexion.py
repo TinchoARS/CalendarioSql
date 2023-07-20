@@ -10,7 +10,7 @@ def conectar():
     except errors.DatabaseError as err:
         print("Error al conectar.", err)
     else:
-        print("Holaaa conecte perri")
+        print("CONECTADO!!")
         return conn
 
 
@@ -97,32 +97,61 @@ def nuevo_evento(evento):
     conn = conectar()
     cur = conn.cursor()
     cur.execute(query_fecha, (evento.fecha,))
-    fecha_id = cur.lastrowid#obtiene el id que se creo
+    fecha_id = cur.lastrowid#obtiene el id que se
 
     # Insertar en la tabla hora
     query_hora = "INSERT INTO hora (hora) VALUES (%s)"
     cur.execute(query_hora, (evento.hora,))
     hora_id = cur.lastrowid #obtiene el id que se creo
 
-    # Insertar en la tabla eventos
-    query_eventos = "INSERT INTO eventos (titulo, duracion, hora_idhora, fecha_idfecha, calendario_idcalendario, importancia, descripcion, etiquetas) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    cur.execute(query_eventos, (evento.titulo, evento.duracion, hora_id, fecha_id, 1, evento.importancia, evento.descripcion, evento.etiquetas))
-    evento_id = cur.lastrowid #obtiene el id que se creo
+  
+    cur.execute("SELECT idcalendario FROM calendario WHERE idcalendario = 1")
+    calendario_id = cur.fetchone()
 
+    if calendario_id is None:
+    # Si no existe un registro, crea uno con el valor 1
+       query_calendario = "INSERT INTO calendario (idcalendario) VALUES (1)"
+       cur.execute(query_calendario)
+    else:
+    # Si ya existe un registro, obtén el valor del id existente
+       calendario_id = 1  # Como ya sabemos que existe el registro con idcalendario = 1, asignamos este valor a calendario_id
+    
     conn.commit()
     conn.close()
 
+def obtener_eventos():
+    try:
+        conn = conectar()
+        cur = conn.cursor()
+        query = """SELECT e.titulo, f.fecha, h.hora, e.duracion, e.descripcion, e.importancia, e.etiquetas
+        FROM eventos e
+        JOIN fecha f ON e.fecha_idfecha = f.idfecha
+        JOIN hora h ON e.hora_idhora = h.idhora"""
+        cur.execute(query)
+        eventos = cur.fetchall()
 
+        print(eventos)
+        conn.close()
+        return eventos
+    except mysql.connector.Error as error:
+        raise Exception(f"Error al obtener los eventos de la base de datos: {error}")
 
-def actualizar_evento(id_evento, evento):
-   #falta terminar
-    query = "UPDATE eventos SET evento = %s WHERE id_evento = %s"
+def actualizar_evento(titulo_evento, evento):
+    query = """
+        UPDATE eventos
+        SET titulo = %s, fecha_idfecha = %s, hora_idhora = %s, duracion = %s, descripcion = %s, importancia = %s, etiquetas = %s
+        WHERE titulo = %s
+    """
     conn = conectar()
     cur = conn.cursor()
-    cur.execute(query, (evento, id_evento))
+    cur.execute(query, (evento.titulo, evento.fecha, evento.hora, evento.duracion, evento.descripcion,
+                        evento.importancia, evento.etiquetas, titulo_evento))
     conn.commit()
     conn.close()
+
+
   #esperar a cargar eventos
+
 def eliminar_evento(tituloEvento):
     query = "DELETE FROM eventos WHERE titulo = %s"
     conn = conectar()
